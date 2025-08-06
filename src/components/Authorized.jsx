@@ -1,14 +1,14 @@
-import { Navigate, Outlet } from "react-router-dom"
-import { NavBar } from "./nav/Navbar.jsx"
+import { Navigate, Outlet } from "react-router-dom";
+import { NavBar } from "./nav/Navbar.jsx";
 
-export const Authorized = () => {
-  if (localStorage.getItem("homesclient_token")) {
-    return <>
-      <NavBar />
-      <main className="p-4">
-        <Outlet />
-      </main>
-    </>
+export const Authorized = ({ token, setToken }) => {
+  if (!token) {
+    return <Navigate to="/login" replace />;
   }
-  return <Navigate to="/login" replace />
-}
+  return (
+    <>
+      <NavBar token={token} setToken={setToken} />
+      <Outlet />
+    </>
+  );
+};

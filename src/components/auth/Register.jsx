@@ -1,99 +1,128 @@
-import { useRef, useState } from "react"
-import { Link, useNavigate } from "react-router-dom";
-import "./Login.css"
+import { useRef } from "react";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../services/AuthManager";
 
-export const Register = () => {
-    const [email, setEmail] = useState("admina@straytor.com")
-    const [password, setPassword] = useState("straytor")
-    const [firstName, setFirstName] = useState("Admina")
-    const [lastName, setLastName] = useState("Straytor")
-    const existDialog = useRef()
-    const navigate = useNavigate()
+export const Register = ({ setToken }) => {
+  const firstName = useRef();
+  const lastName = useRef();
+  const email = useRef();
+  const username = useRef();
+  const bio = useRef();
+  const password = useRef();
+  const verifyPassword = useRef();
+  const passwordDialog = useRef();
+  const navigate = useNavigate();
 
-    const handleRegister = (e) => {
-        e.preventDefault()
-        fetch("http://localhost:8000/register", {
-            method: "POST",
-            body: JSON.stringify({
-                email,
-                password,
-                first_name: firstName,
-                last_name: lastName
-            }),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-            .then(res => res.json())
-            .then(authInfo => {
-                if (authInfo && authInfo.token) {
-                    localStorage.setItem("homesclient_token", JSON.stringify(authInfo))
-                    navigate("/")
-                } else {
-                    existDialog.current.showModal()
-                }
-            })
+  const handleRegister = (e) => {
+    e.preventDefault();
+
+    if (password.current.value === verifyPassword.current.value) {
+      const newUser = {
+        username: username.current.value,
+        first_name: firstName.current.value,
+        last_name: lastName.current.value,
+        email: email.current.value,
+        password: password.current.value,
+        bio: bio.current.value,
+      };
+
+      registerUser(newUser).then((res) => {
+        console.log(typeof res);
+        if ("valid" in res && res.valid) {
+          setToken(res.token);
+          navigate("/");
+        }
+      });
+    } else {
+      passwordDialog.current.showModal();
     }
+  };
 
-    return (
-        <main className="container--login">
-            <dialog className="dialog dialog--auth" ref={existDialog}>
-                <div>User does not exist</div>
-                <button className="button--close" onClick={() => existDialog.current.close()}>Close</button>
-            </dialog>
+  return (
+    <section className="columns is-centered">
+      <form className="column is-two-thirds" onSubmit={handleRegister}>
+        <h1 className="title">Nashville Homes</h1>
+        <p className="subtitle">Create an account</p>
+        <div className="field">
+          <label className="label">First Name</label>
+          <div className="control">
+            <input className="input" type="text" ref={firstName} />
+          </div>
+        </div>
 
-            <section>
-                <form className="form--login" onSubmit={handleRegister}>
-                    <h1 className="text-4xl mt-7 mb-3">homesclient</h1>
-                    <h2 className="text-xl mb-10">Register new account</h2>
-                    <fieldset className="mb-4">
-                        <label htmlFor="firstName"> First name </label>
-                        <input type="text" id="firstName"
-                            value={firstName}
-                            onChange={evt => setFirstName(evt.target.value)}
-                            className="form-control"
-                            placeholder=""
-                            required autoFocus />
-                    </fieldset>
-                    <fieldset className="mb-4">
-                        <label htmlFor="lastName"> Last name </label>
-                        <input type="text" id="lastName"
-                            value={lastName}
-                            onChange={evt => setLastName(evt.target.value)}
-                            className="form-control"
-                            placeholder=""
-                            required autoFocus />
-                    </fieldset>
-                    <fieldset className="mb-4">
-                        <label htmlFor="inputEmail"> Email address </label>
-                        <input type="email" id="inputEmail"
-                            value={email}
-                            onChange={evt => setEmail(evt.target.value)}
-                            className="form-control"
-                            placeholder="Email address"
-                            required autoFocus />
-                    </fieldset>
-                    <fieldset className="mb-4">
-                        <label htmlFor="inputPassword"> Password </label>
-                        <input type="password" id="inputPassword"
-                            value={password}
-                            onChange={evt => setPassword(evt.target.value)}
-                            className="form-control"
-                            placeholder="Password"
-                        />
-                    </fieldset>
-                    <fieldset>
-                        <button type="submit" className="button p-3 rounded-md bg-blue-800 text-blue-100">
-                            Register
-                        </button>
-                    </fieldset>
-                </form>
-            </section>
-            <div className="loginLinks">
-                <section className="link--register">
-                    <Link className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" to="/login">Already have an account?</Link>
-                </section>
+        <div className="field">
+          <label className="label">Last Name</label>
+          <div className="control">
+            <input className="input" type="text" ref={lastName} />
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="label">Username</label>
+          <div className="control">
+            <input className="input" type="text" ref={username} />
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="label">Email</label>
+          <div className="control">
+            <input className="input" type="email" ref={email} />
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="label">Password</label>
+          <div className="field-body">
+            <div className="field">
+              <p className="control is-expanded">
+                <input
+                  className="input"
+                  type="password"
+                  placeholder="Password"
+                  ref={password}
+                />
+              </p>
             </div>
-        </main>
-    )
-}
+
+            <div className="field">
+              <p className="control is-expanded">
+                <input
+                  className="input"
+                  type="password"
+                  placeholder="Verify Password"
+                  ref={verifyPassword}
+                />
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="field">
+          <label className="label">Bio</label>
+          <div className="control">
+            <textarea
+              className="textarea"
+              placeholder="Tell us about yourself..."
+              ref={bio}
+            ></textarea>
+          </div>
+        </div>
+
+        <div className="field is-grouped">
+          <div className="control">
+            <button className="button is-link" type="submit">
+              Submit
+            </button>
+          </div>
+          <div className="control">
+            <Link to="/login" className="button is-link is-light">
+              Cancel
+            </Link>
+          </div>
+        </div>
+      </form>
+    </section>
+  );
+};
