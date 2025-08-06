@@ -7,7 +7,6 @@ export const Login = ({ setToken }) => {
   const navigate = useNavigate();
   const [isUnsuccessful, setisUnsuccessful] = useState(false);
 
-  // Updated handleLogin function
   const handleLogin = async (e) => {
     e.preventDefault();
     setisUnsuccessful(false);

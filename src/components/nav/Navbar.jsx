@@ -7,6 +7,10 @@ export const NavBar = ({ token, setToken }) => {
     <ul className="navbar pb-10">
       {token ? (
         <>
+          <li>
+            <NavLink to={"/list-your-home"}>List Your Home</NavLink>
+            <NavLink to={"/your-home"}>Your Home</NavLink>
+          </li>
           <li className="navbar__item">
             <button
               onClick={() => {
