@@ -1,5 +1,5 @@
-export const getCurrentUser = (token) => {
-  return fetch("http://localhost:8000/current_user", {
+export const getAgents = (token) => {
+  return fetch(`http://localhost:8000/agents`, {
     headers: {
       Authorization: `Token ${token}`,
       "Content-Type": "application/json",

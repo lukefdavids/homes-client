@@ -1,45 +1,16 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getUsersHomes, updateHome } from "../services/homeService";
+import { getAgents } from "../services/agentServices";
 
-export const CreateHome = ({ token }) => {
+export const EditHome = ({ token }) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { isPending, error, data } = useQuery({
-    queryKey: ["createHomeData"],
-    queryFn: () =>
-      fetch("http://localhost:8000/agents", {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      }).then((res) => res.json()),
-  });
 
-  const createHomeMutation = useMutation({
-    mutationFn: (newHome) =>
-      fetch("http://localhost:8000/homes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify(newHome),
-      }).then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to create home");
-        }
-        return res.json();
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["homes"] });
-      navigate("/your-home");
-    },
-  });
-
-  const [newHome, setNewHome] = useState({
+  const [home, setHome] = useState({
+    id: 0,
     home_type: 1,
-    beds: "",
-    bath: "",
+    beds: 0,
+    bath: 0,
     sqft: "",
     price: "",
     address: "",
@@ -49,10 +20,23 @@ export const CreateHome = ({ token }) => {
     listing_agent: "",
     description: "",
   });
+  const [agents, setAgents] = useState();
+
+  useEffect(() => {
+    getAgents(token).then(setAgents);
+    getUsersHomes(token).then((res) => {
+      setHome({
+        ...res,
+        id: res.id,
+        home_type: res.home_type.id,
+        listing_agent: res.listing_agent.id,
+      });
+    });
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewHome((prev) => ({
+    setHome((prev) => ({
       ...prev,
       [name]: [
         "home_type",
@@ -83,22 +67,21 @@ export const CreateHome = ({ token }) => {
       "listing_agent",
       "description",
     ];
-    const missingFields = requiredFields.filter((field) => !newHome[field]);
+    const missingFields = requiredFields.filter((field) => !home[field]);
 
     if (missingFields.length > 0) {
       alert(`Please fill in all required fields`);
       return;
     }
-    createHomeMutation.mutate(newHome);
+    updateHome(token, home).then(() => {
+      navigate("/your-home");
+    });
   };
-  if (isPending) return "Loading...";
-
-  if (error) return "An error has occurred: " + error.message;
 
   return (
     <>
       <div className="mx-auto mt-25">
-        <h1 className="text-6xl text-center">List Your Home</h1>
+        <h1 className="text-6xl text-center">Edit Your Home</h1>
       </div>
 
       <form className="max-w-xl mt-10 border-1 mx-auto p-6 bg-white rounded-2xl shadow space-y-4">
@@ -109,7 +92,7 @@ export const CreateHome = ({ token }) => {
           <select
             name="home_type"
             required
-            value={newHome.home_type}
+            value={home.home_type}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           >
@@ -128,7 +111,7 @@ export const CreateHome = ({ token }) => {
             required
             name="beds"
             placeholder="0"
-            value={newHome.beds}
+            value={home.beds}
             onChange={handleChange}
           />
         </div>
@@ -144,7 +127,7 @@ export const CreateHome = ({ token }) => {
             required
             placeholder="0"
             step="0.5"
-            value={newHome.bath}
+            value={home.bath}
             onChange={handleChange}
           />
         </div>
@@ -158,7 +141,7 @@ export const CreateHome = ({ token }) => {
             name="sqft"
             required
             placeholder="Enter square footage"
-            value={newHome.sqft}
+            value={home.sqft}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           />
@@ -173,7 +156,7 @@ export const CreateHome = ({ token }) => {
             name="price"
             required
             placeholder="Enter listing price for your home"
-            value={newHome.price}
+            value={home.price}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           />
@@ -188,7 +171,7 @@ export const CreateHome = ({ token }) => {
             name="address"
             required
             placeholder="Street address"
-            value={newHome.address}
+            value={home.address}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           />
@@ -200,7 +183,7 @@ export const CreateHome = ({ token }) => {
           </label>
           <select
             name="state"
-            value={newHome.state}
+            value={home.state}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2 bg-gray-100 text-gray-700"
             disabled
@@ -218,7 +201,7 @@ export const CreateHome = ({ token }) => {
             name="zip"
             required
             placeholder="ZIP Code"
-            value={newHome.zip}
+            value={home.zip}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           />
@@ -233,7 +216,7 @@ export const CreateHome = ({ token }) => {
             name="image"
             required
             placeholder="https://example.com/image.jpg"
-            value={newHome.image}
+            value={home.image}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           />
@@ -246,12 +229,12 @@ export const CreateHome = ({ token }) => {
           <select
             name="listing_agent"
             required
-            value={newHome.listing_agent}
+            value={home.listing_agent}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           >
             <option value="">Select an agent</option>
-            {data.map((agent) => (
+            {agents?.map((agent) => (
               <option key={agent.id} value={agent.id}>
                 {agent.name}
               </option>
@@ -268,7 +251,7 @@ export const CreateHome = ({ token }) => {
             name="description"
             required
             placeholder="Enter a short description of your home"
-            value={newHome.description}
+            value={home.description}
             onChange={handleChange}
             className="flex-1 border border-gray-300 rounded-lg p-2"
           ></textarea>

@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export const Login = ({ setToken }) => {
   const username = useRef();
   const password = useRef();
-  const navigate = useNavigate();
   const [isUnsuccessful, setisUnsuccessful] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,9 +22,7 @@ export const Login = ({ setToken }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
-
       const data = await response.json();
-
       if (data.valid && data.token) {
         setToken(data.token);
         navigate("/");
@@ -37,44 +35,64 @@ export const Login = ({ setToken }) => {
     }
   };
 
+  const handleCancel = (e) => {
+    e.preventDefault();
+    navigate("/register");
+  };
+
   return (
-    <section className="columns is-centered">
-      <form className="column is-two-thirds" onSubmit={handleLogin}>
-        <h1 className="title">Nashville Homes</h1>
-        <p className="subtitle">Please sign in</p>
+    <form className="flex justify-center py-8 min-h-screen bg-gray-50">
+      <div className="w-full max-w-md px-4">
+        <div className="bg-white rounded-lg shadow-md p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Nashville Homes
+          </h1>
+          <p className="text-lg text-gray-600 mb-6">Please sign in</p>
 
-        <div className="field">
-          <label className="label">Username</label>
-          <div className="control">
-            <input className="input" type="text" ref={username} />
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Username
+            </label>
+            <input
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              ref={username}
+            />
           </div>
-        </div>
 
-        <div className="field">
-          <label className="label">Password</label>
-          <div className="control">
-            <input className="input" type="password" ref={password} />
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <input
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              type="password"
+              ref={password}
+            />
           </div>
-        </div>
 
-        <div className="field is-grouped">
-          <div className="control">
-            <button className="button is-link" type="submit">
+          <div className="flex gap-4 mb-4">
+            <button
+              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              onClick={handleLogin}
+            >
               Submit
             </button>
-          </div>
-          <div className="control">
-            <Link to="/register" className="button is-link is-light">
+            <button
+              onClick={handleCancel}
+              className="px-6 py-2 bg-blue-100 text-blue-700 font-medium rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            >
               Cancel
-            </Link>
+            </button>
           </div>
+
+          {isUnsuccessful && (
+            <p className="text-sm text-red-600 mt-2">
+              Username or password not valid
+            </p>
+          )}
         </div>
-        {isUnsuccessful ? (
-          <p className="help is-danger">Username or password not valid</p>
-        ) : (
-          ""
-        )}
-      </form>
-    </section>
+      </div>
+    </form>
   );
 };
