@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-export const CreateHome = ({ token }) => {
+export const CreateHome = () => {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const queryClient = useQueryClient();
   const { isPending, error, data } = useQuery({
     queryKey: ["createHomeData"],

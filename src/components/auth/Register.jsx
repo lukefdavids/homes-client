@@ -2,8 +2,9 @@ import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { registerUser } from "../services/AuthManager";
+import { useAuth } from "../../context/AuthContext";
 
-export const Register = ({ setToken }) => {
+export const Register = () => {
   const firstName = useRef();
   const lastName = useRef();
   const email = useRef();
@@ -11,7 +12,7 @@ export const Register = ({ setToken }) => {
   const password = useRef();
   const verifyPassword = useRef();
   const navigate = useNavigate();
-
+  const { setToken } = useAuth();
   const handleRegister = (e) => {
     e.preventDefault();
 

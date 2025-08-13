@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { getUsersHomes, updateHome } from "../services/homeService";
 import { getAgents } from "../services/agentServices";
 
-export const EditHome = ({ token }) => {
+export const EditHome = () => {
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   const [home, setHome] = useState({
     id: 0,

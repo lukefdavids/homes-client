@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-export const Login = ({ setToken }) => {
+export const Login = () => {
   const username = useRef();
   const password = useRef();
   const [isUnsuccessful, setisUnsuccessful] = useState(false);
   const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();

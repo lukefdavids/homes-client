@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { deleteHome, getUsersHomes } from "../services/homeService";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../Modal";
+import { useAuth } from "../../context/AuthContext";
 
-export const YourHome = ({ token, currentUser }) => {
+export const YourHome = () => {
   const [home, setHome] = useState();
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   useEffect(() => {
     getUsersHomes(token).then(setHome);
