@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUsersHomes, updateHome } from "../services/homeService";
 import { getAgents } from "../services/agentServices";
+import { useAuth } from "../../context/AuthContext";
 
 export const EditHome = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export const EditHome = () => {
   const [agents, setAgents] = useState();
 
   useEffect(() => {
-    getAgents(token).then(setAgents);
+    getAgents().then(setAgents);
     getUsersHomes(token).then((res) => {
       setHome({
         ...res,

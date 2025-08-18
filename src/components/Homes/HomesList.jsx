@@ -9,7 +9,7 @@ export const HomesList = () => {
 
   useEffect(() => {
     getAllHomes(token).then(setHomes);
-  }, []);
+  }, [token]);
   return (
     <>
       <div id="titles" className="flex flex-col max-w-screen">

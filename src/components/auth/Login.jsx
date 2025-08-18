@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export const Login = () => {
   const username = useRef();
@@ -43,9 +44,9 @@ export const Login = () => {
   };
 
   return (
-    <form className="flex justify-center py-8 min-h-screen bg-gray-50">
+    <form className="flex justify-center py-8 min-h-screen">
       <div className="w-full max-w-md px-4">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Nashville Homes
           </h1>
@@ -73,7 +74,7 @@ export const Login = () => {
             />
           </div>
 
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-4 justify-center">
             <button
               className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
               onClick={handleLogin}
@@ -87,7 +88,13 @@ export const Login = () => {
               Cancel
             </button>
           </div>
-
+          <div>
+            <Link to="/register">
+              <p className=" hover:text-blue-600 transition-colors duration-200">
+                Not a member yet? Sign up here
+              </p>
+            </Link>
+          </div>
           {isUnsuccessful && (
             <p className="text-sm text-red-600 mt-2">
               Username or password not valid

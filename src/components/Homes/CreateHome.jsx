@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 export const CreateHome = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, userHome } = useAuth();
   const queryClient = useQueryClient();
+  const [addressValidationError, setAddressValidationError] = useState("");
+  const [isValidatingAddress, setIsValidatingAddress] = useState(false);
+
   const { isPending, error, data } = useQuery({
     queryKey: ["createHomeData"],
     queryFn: () =>
@@ -38,6 +41,12 @@ export const CreateHome = () => {
     },
   });
 
+  useEffect(() => {
+    if (userHome) {
+      navigate("/your-home");
+    }
+  }, [userHome, navigate]);
+
   const [newHome, setNewHome] = useState({
     home_type: 1,
     beds: "",
@@ -50,10 +59,18 @@ export const CreateHome = () => {
     image: "",
     listing_agent: "",
     description: "",
+    lat: "", // Add latitude
+    lng: "", // Add longitude
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Clear address validation error when user types in address field
+    if (name === "address") {
+      setAddressValidationError("");
+    }
+
     setNewHome((prev) => ({
       ...prev,
       [name]: [
@@ -71,8 +88,67 @@ export const CreateHome = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const validateAddress = async (address, zip) => {
+    const fullAddress = `${address}, Nashville, TN ${zip}`;
+
+    try {
+      const response = await fetch(
+        `https://addressvalidation.googleapis.com/v1:validateAddress?key=AIzaSyA_96q3aTcBnEpKLDLQZbwLPp2r-Q6EaZg`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            address: {
+              addressLines: [address],
+              locality: "Nashville",
+              administrativeArea: "TN",
+              postalCode: zip.toString(),
+              regionCode: "US",
+            },
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Address validation service error");
+      }
+
+      const verdict = result.result?.verdict;
+      const geocode = result.result?.geocode;
+
+      if (verdict?.addressComplete && verdict?.hasInferredComponents !== true) {
+        if (geocode?.location) {
+          return {
+            isValid: true,
+            lat: geocode.location.latitude,
+            lng: geocode.location.longitude,
+            formattedAddress: result.result?.address?.formattedAddress,
+          };
+        }
+        return { isValid: true };
+      } else {
+        return {
+          isValid: false,
+          error:
+            "Address could not be verified. Please check the address and try again.",
+        };
+      }
+    } catch (error) {
+      console.error("Address validation error:", error);
+      return {
+        isValid: false,
+        error: "Unable to validate address. Please try again.",
+      };
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setAddressValidationError("");
 
     const requiredFields = [
       "beds",
@@ -91,8 +167,28 @@ export const CreateHome = () => {
       alert(`Please fill in all required fields`);
       return;
     }
-    createHomeMutation.mutate(newHome);
+
+    setIsValidatingAddress(true);
+    const addressValidation = await validateAddress(
+      newHome.address,
+      newHome.zip
+    );
+    setIsValidatingAddress(false);
+
+    if (!addressValidation.isValid) {
+      setAddressValidationError(addressValidation.error);
+      return;
+    }
+
+    const homeData = { ...newHome };
+    if (addressValidation.lat && addressValidation.lng) {
+      homeData.lat = addressValidation.lat;
+      homeData.lng = addressValidation.lng;
+    }
+
+    createHomeMutation.mutate(homeData);
   };
+
   if (isPending) return "Loading...";
 
   if (error) return "An error has occurred: " + error.message;
@@ -185,15 +281,26 @@ export const CreateHome = () => {
           <label className="text-base font-medium text-gray-700 w-32">
             Address
           </label>
-          <input
-            type="text"
-            name="address"
-            required
-            placeholder="Street address"
-            value={newHome.address}
-            onChange={handleChange}
-            className="flex-1 border border-gray-300 rounded-lg p-2"
-          />
+          <div className="flex-1">
+            <input
+              type="text"
+              name="address"
+              required
+              placeholder="Street address"
+              value={newHome.address}
+              onChange={handleChange}
+              className={`w-full border rounded-lg p-2 ${
+                addressValidationError
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-blue-400"
+              } focus:outline-none focus:ring-2`}
+            />
+            {addressValidationError && (
+              <p className="text-red-500 text-sm mt-1">
+                {addressValidationError}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -280,9 +387,14 @@ export const CreateHome = () => {
           <button
             type="submit"
             onClick={handleSubmit}
-            className="w-1/2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+            disabled={isValidatingAddress || createHomeMutation.isPending}
+            className="w-1/2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Submit Listing
+            {isValidatingAddress
+              ? "Validating Address..."
+              : createHomeMutation.isPending
+              ? "Submitting..."
+              : "Submit Listing"}
           </button>
         </div>
       </form>

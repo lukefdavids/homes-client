@@ -5,7 +5,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 function App() {
   return (
     <AuthProvider>
-      <ApplicationViews />;
+      <ApplicationViews />
     </AuthProvider>
   );
 }

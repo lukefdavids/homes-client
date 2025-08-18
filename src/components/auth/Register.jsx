@@ -13,9 +13,7 @@ export const Register = () => {
   const verifyPassword = useRef();
   const navigate = useNavigate();
   const { setToken } = useAuth();
-  const handleRegister = (e) => {
-    e.preventDefault();
-
+  const handleRegister = () => {
     if (password.current.value === verifyPassword.current.value) {
       const newUser = {
         username: username.current.value,
@@ -43,9 +41,12 @@ export const Register = () => {
   };
 
   return (
-    <form className="flex justify-center py-8 min-h-screen bg-gray-50">
+    <form
+      onSubmit={handleRegister}
+      className="flex justify-center py-8 min-h-screen"
+    >
       <div className="w-full max-w-2xl px-4">
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Nashville Homes
           </h1>
@@ -115,11 +116,8 @@ export const Register = () => {
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <button
-              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              onClick={handleRegister}
-            >
+          <div className="flex gap-4 justify-center">
+            <button className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
               Submit
             </button>
             <button
