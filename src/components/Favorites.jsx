@@ -24,14 +24,14 @@ export const Favorites = () => {
       <div className="flex">
         <div
           id="all-home-cards"
-          className=" justify-center flex flex-wrap gap-5 w-1/2"
+          className=" justify-center overflow-y-scroll h-[500px] flex flex-wrap gap-5 w-1/2"
         >
           {favoriteHomes.length ? (
             favoriteHomes?.map((home) => (
               <HomeCard
                 key={home.id}
                 home={home}
-                size="small"
+                size="medium"
                 handleRemoveFavorite={handleRemoveFavorite}
               />
             ))

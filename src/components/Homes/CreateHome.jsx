@@ -5,18 +5,21 @@ import { useAuth } from "../../context/AuthContext";
 
 export const CreateHome = () => {
   const navigate = useNavigate();
-  const { token, userHome } = useAuth();
+  const { token, userHome, setUserHome } = useAuth();
   const queryClient = useQueryClient();
   const [addressValidationError, setAddressValidationError] = useState("");
   const [isValidatingAddress, setIsValidatingAddress] = useState(false);
+  const [suggestedAddress, setSuggestedAddress] = useState("");
+
+  useEffect(() => {
+    if (userHome) navigate("/your-home");
+  }, [userHome, navigate]);
 
   const { isPending, error, data } = useQuery({
     queryKey: ["createHomeData"],
     queryFn: () =>
       fetch("http://localhost:8000/agents", {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
+        headers: { Authorization: `Token ${token}` },
       }).then((res) => res.json()),
   });
 
@@ -30,22 +33,22 @@ export const CreateHome = () => {
         },
         body: JSON.stringify(newHome),
       }).then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to create home");
-        }
+        if (!res.ok) throw new Error("Failed to create home");
         return res.json();
       }),
-    onSuccess: () => {
+    onSuccess: (createdHome) => {
+      // Update the user's home in context
+      setUserHome(createdHome);
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["homes"] });
+      // Navigate to the home page
       navigate("/your-home");
     },
+    onError: (err) => {
+      console.error("Mutation error:", err);
+      setAddressValidationError("Failed to create home. Please try again.");
+    },
   });
-
-  useEffect(() => {
-    if (userHome) {
-      navigate("/your-home");
-    }
-  }, [userHome, navigate]);
 
   const [newHome, setNewHome] = useState({
     home_type: 1,
@@ -59,16 +62,16 @@ export const CreateHome = () => {
     image: "",
     listing_agent: "",
     description: "",
-    lat: "", // Add latitude
-    lng: "", // Add longitude
+    lat: "",
+    lng: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Clear address validation error when user types in address field
     if (name === "address") {
       setAddressValidationError("");
+      setSuggestedAddress("");
     }
 
     setNewHome((prev) => ({
@@ -82,31 +85,28 @@ export const CreateHome = () => {
         "listing_agent",
       ].includes(name)
         ? parseInt(value) || ""
-        : name === "bath"
+        : name.includes("bath")
         ? parseFloat(value) || ""
         : value,
     }));
   };
 
   const validateAddress = async (address, zip) => {
-    const fullAddress = `${address}, Nashville, TN ${zip}`;
-
     try {
       const response = await fetch(
         `https://addressvalidation.googleapis.com/v1:validateAddress?key=AIzaSyA_96q3aTcBnEpKLDLQZbwLPp2r-Q6EaZg`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             address: {
               addressLines: [address],
               locality: "Nashville",
               administrativeArea: "TN",
-              postalCode: zip.toString(),
               regionCode: "US",
+              postalCode: zip.toString(),
             },
+            enableUspsCass: true,
           }),
         }
       );
@@ -114,27 +114,39 @@ export const CreateHome = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error("Address validation service error");
+        throw new Error(
+          result.error?.message || "Address validation service error"
+        );
       }
 
       const verdict = result.result?.verdict;
       const geocode = result.result?.geocode;
+      const validatedAddress = result.result?.address;
 
-      if (verdict?.addressComplete && verdict?.hasInferredComponents !== true) {
-        if (geocode?.location) {
-          return {
-            isValid: true,
-            lat: geocode.location.latitude,
-            lng: geocode.location.longitude,
-            formattedAddress: result.result?.address?.formattedAddress,
-          };
-        }
-        return { isValid: true };
+      if (verdict?.addressComplete) {
+        // Extract just the street address (number + street name)
+        const streetNumber =
+          validatedAddress?.addressComponents?.find(
+            (component) => component.componentType === "street_number"
+          )?.componentName?.text || "";
+
+        const streetName =
+          validatedAddress?.addressComponents?.find(
+            (component) => component.componentType === "route"
+          )?.componentName?.text || "";
+
+        const streetAddress = `${streetNumber} ${streetName}`.trim();
+
+        return {
+          isValid: true,
+          lat: geocode?.location?.latitude || "",
+          lng: geocode?.location?.longitude || "",
+          suggested: streetAddress || address, // fallback to original if parsing fails
+        };
       } else {
         return {
           isValid: false,
-          error:
-            "Address could not be verified. Please check the address and try again.",
+          error: "Address could not be verified. Please check and try again.",
         };
       }
     } catch (error) {
@@ -146,9 +158,20 @@ export const CreateHome = () => {
     }
   };
 
+  const handleUseSuggested = () => {
+    if (suggestedAddress) {
+      setNewHome((prev) => ({
+        ...prev,
+        address: suggestedAddress,
+      }));
+      setSuggestedAddress("");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setAddressValidationError("");
+    setSuggestedAddress("");
 
     const requiredFields = [
       "beds",
@@ -161,36 +184,38 @@ export const CreateHome = () => {
       "listing_agent",
       "description",
     ];
-    const missingFields = requiredFields.filter((field) => !newHome[field]);
 
+    const missingFields = requiredFields.filter((field) => !newHome[field]);
     if (missingFields.length > 0) {
-      alert(`Please fill in all required fields`);
+      alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
       return;
     }
 
     setIsValidatingAddress(true);
-    const addressValidation = await validateAddress(
-      newHome.address,
-      newHome.zip
-    );
+    const validation = await validateAddress(newHome.address, newHome.zip);
     setIsValidatingAddress(false);
 
-    if (!addressValidation.isValid) {
-      setAddressValidationError(addressValidation.error);
+    if (!validation.isValid) {
+      setAddressValidationError(validation.error);
       return;
     }
 
-    const homeData = { ...newHome };
-    if (addressValidation.lat && addressValidation.lng) {
-      homeData.lat = addressValidation.lat;
-      homeData.lng = addressValidation.lng;
+    if (validation.suggested && validation.suggested !== newHome.address) {
+      setSuggestedAddress(validation.suggested);
+      return;
     }
 
+    const homeData = {
+      ...newHome,
+      lat: validation.lat,
+      lng: validation.lng,
+    };
+
+    // Just call mutate - the onSuccess/onError are handled in the mutation definition
     createHomeMutation.mutate(homeData);
   };
 
   if (isPending) return "Loading...";
-
   if (error) return "An error has occurred: " + error.message;
 
   return (
@@ -199,7 +224,10 @@ export const CreateHome = () => {
         <h1 className="text-6xl text-center">List Your Home</h1>
       </div>
 
-      <form className="max-w-xl mt-10 border-1 mx-auto p-6 bg-white rounded-2xl shadow space-y-4">
+      <form
+        className="max-w-xl mt-10 border-1 mx-auto p-6 bg-white rounded-2xl shadow space-y-4"
+        onSubmit={handleSubmit}
+      >
         <div className="flex items-center justify-between">
           <label className="text-base font-medium text-gray-700 w-32">
             Type
@@ -216,6 +244,7 @@ export const CreateHome = () => {
             <option value="3">Townhome</option>
           </select>
         </div>
+
         <div className="flex items-center justify-between">
           <label className="text-base font-medium text-gray-700 w-32">
             Beds
@@ -264,7 +293,7 @@ export const CreateHome = () => {
 
         <div className="flex items-center justify-between">
           <label className="text-base font-medium text-gray-700 w-32">
-            Listing Price:
+            Listing Price
           </label>
           <input
             type="number"
@@ -299,6 +328,20 @@ export const CreateHome = () => {
               <p className="text-red-500 text-sm mt-1">
                 {addressValidationError}
               </p>
+            )}
+            {suggestedAddress && (
+              <div className="mt-2 p-2 bg-yellow-100 rounded">
+                <p className="text-sm">
+                  Did you mean: <strong>{suggestedAddress}</strong>?
+                </p>
+                <button
+                  type="button"
+                  onClick={handleUseSuggested}
+                  className="text-blue-600 underline text-sm mt-1"
+                >
+                  Use Suggested Address
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -386,7 +429,6 @@ export const CreateHome = () => {
         <div className="pt-4">
           <button
             type="submit"
-            onClick={handleSubmit}
             disabled={isValidatingAddress || createHomeMutation.isPending}
             className="w-1/2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
           >

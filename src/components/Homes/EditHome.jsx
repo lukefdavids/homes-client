@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export const EditHome = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, setUserHome } = useAuth();
 
   const [home, setHome] = useState({
     id: 0,
@@ -34,7 +34,7 @@ export const EditHome = () => {
         listing_agent: res.listing_agent.id,
       });
     });
-  }, []);
+  }, [token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,7 +75,8 @@ export const EditHome = () => {
       alert(`Please fill in all required fields`);
       return;
     }
-    updateHome(token, home).then(() => {
+    updateHome(token, home).then((updatedHome) => {
+      setUserHome(updatedHome);
       navigate("/your-home");
     });
   };

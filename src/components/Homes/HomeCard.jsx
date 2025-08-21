@@ -13,7 +13,9 @@ export const HomeCard = ({ home, handleRemoveFavorite, size = "large" }) => {
     if (isFavorited) {
       deleteFavorite(token, home.id).then(() => {
         setIsFavorited(false);
-        handleRemoveFavorite?.(home.id);
+        if (handleRemoveFavorite) {
+          handleRemoveFavorite(home.id);
+        }
       });
     } else {
       favoriteHome(token, home.id).then(() => {
@@ -22,7 +24,6 @@ export const HomeCard = ({ home, handleRemoveFavorite, size = "large" }) => {
     }
   };
 
-  // Size-specific styles
   const sizeStyles = {
     large: {
       container:
@@ -76,25 +77,29 @@ export const HomeCard = ({ home, handleRemoveFavorite, size = "large" }) => {
 
   const styles = sizeStyles[size];
 
-  // Card content component
   const CardContent = () => (
     <div className={styles.container}>
       <div className={styles.imageContainer}>
         <img src={home.image} alt={home.address} className={styles.image} />
-        {token && (
-          <svg
-            className="absolute bottom-0 right-0 cursor-pointer"
-            width={styles.star.width}
-            height={styles.star.height}
-            viewBox={styles.star.viewBox}
+        {token && size !== "small" && (
+          <div
+            className="absolute bottom-0 right-0 cursor-pointer z-10"
             onClick={handleFavorite}
-            xmlns="http://www.w3.org/2000/svg"
           >
-            <polygon
-              points="100,10 130,60 180,70 140,120 150,170 100,150 50,170 60,120 20,70 70,60"
-              fill={isFavorited ? "yellow" : "white"}
-            />
-          </svg>
+            <svg
+              width={styles.star.width}
+              height={styles.star.height}
+              viewBox={styles.star.viewBox}
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <polygon
+                points="100,10 130,60 180,70 140,120 150,170 100,150 50,170 60,120 20,70 70,60"
+                fill={isFavorited ? "yellow" : "white"}
+                stroke="black"
+                strokeWidth="2"
+              />
+            </svg>
+          </div>
         )}
       </div>
 
@@ -127,7 +132,6 @@ export const HomeCard = ({ home, handleRemoveFavorite, size = "large" }) => {
     </div>
   );
 
-  // Conditionally wrap with Link based on size
   if (size === "small") {
     return <CardContent />;
   }

@@ -38,14 +38,12 @@ const HomeMarkers = ({ homes }) => {
       clusterer.current = new MarkerClusterer({ map });
     }
 
-    // Add click listener to map to close card when clicking outside markers
     const handleMapClick = () => {
       setSelectedHome(null);
     };
 
     map.addListener("click", handleMapClick);
 
-    // Cleanup listener on unmount
     return () => {
       google.maps.event.clearListeners(map, "click");
     };
