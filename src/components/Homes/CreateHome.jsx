@@ -124,7 +124,6 @@ export const CreateHome = () => {
       const validatedAddress = result.result?.address;
 
       if (verdict?.addressComplete) {
-        // Extract just the street address (number + street name)
         const streetNumber =
           validatedAddress?.addressComponents?.find(
             (component) => component.componentType === "street_number"
@@ -141,7 +140,7 @@ export const CreateHome = () => {
           isValid: true,
           lat: geocode?.location?.latitude || "",
           lng: geocode?.location?.longitude || "",
-          suggested: streetAddress || address, // fallback to original if parsing fails
+          suggested: streetAddress || address,
         };
       } else {
         return {
@@ -211,7 +210,6 @@ export const CreateHome = () => {
       lng: validation.lng,
     };
 
-    // Just call mutate - the onSuccess/onError are handled in the mutation definition
     createHomeMutation.mutate(homeData);
   };
 

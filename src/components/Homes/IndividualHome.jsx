@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom";
 import { getHomeById } from "../services/homeService";
-import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 import { HomeDetails } from "./HomeDetails";
 

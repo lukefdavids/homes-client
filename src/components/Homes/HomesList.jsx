@@ -62,14 +62,17 @@ export const HomesList = () => {
         <h1 className="lg:text-6xl text-2xl md:text-4xl font-serif font-bold text-slate-800">
           NASHVILLE HOMES
         </h1>
-        <h3 className="text-1xl md:text-2xl lg:text-4xl font-serif italic text-slate-800 py-4">
+        <h3 className="text-1xl md:text-2xl lg:text-4xl font-serif  italic text-slate-800 py-4">
           Find your dream home in Music City
         </h3>
       </div>
 
-      <div id="filters" className="flex gap-4 justify-center my-6">
+      <div
+        id="filters"
+        className="flex flex-wrap gap-4 justify-center my-6 sm:flex-row sm:gap-4"
+      >
         <select
-          className="border p-2 text-center rounded-2xl"
+          className="border p-2 text-center rounded-2xl w-full sm:w-auto"
           name="propertyType"
           value={filters.propertyType}
           onChange={handleFilterSelection}
@@ -81,7 +84,7 @@ export const HomesList = () => {
         </select>
 
         <select
-          className="border p-2 text-center rounded-2xl"
+          className="border p-2 text-center rounded-2xl w-full sm:w-auto"
           name="beds"
           value={filters.beds}
           onChange={handleFilterSelection}
@@ -95,7 +98,7 @@ export const HomesList = () => {
         </select>
 
         <select
-          className="border p-2 text-center rounded-2xl"
+          className="border p-2 text-center rounded-2xl w-full sm:w-auto"
           name="bath"
           value={filters.bath}
           onChange={handleFilterSelection}
@@ -107,6 +110,14 @@ export const HomesList = () => {
           <option value="4">4</option>
           <option value="5+">5+</option>
         </select>
+
+        <button
+          onClick={() => setFilters({ propertyType: "", beds: "", bath: "" })}
+          className="w-full sm:w-auto px-3 py-2 rounded-full bg-red-100 text-black hover:bg-red-200 transition"
+          title="Reset filters"
+        >
+          Reset Filters
+        </button>
       </div>
 
       <section

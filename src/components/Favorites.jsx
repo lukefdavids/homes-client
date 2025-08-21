@@ -15,19 +15,20 @@ export const Favorites = () => {
     setFavoriteHomes((prev) => prev.filter((home) => home.id !== homeId));
   };
   return (
-    <section className="gap-8 flex flex-col mx-auto w-19/20 ">
+    <section className="gap-8 flex flex-col mx-auto w-[95%]">
       <div className="flex justify-center">
-        <h1 className="lg:text-6xl text-2xl md:text-4xl  font-light font-serif  text-slate-800">
+        <h1 className="lg:text-6xl text-2xl md:text-4xl font-light font-serif text-slate-800">
           FAVORITES
         </h1>
       </div>
-      <div className="flex">
+
+      <div className="flex flex-col md:flex-row gap-6">
         <div
           id="all-home-cards"
-          className=" justify-center overflow-y-scroll h-[500px] flex flex-wrap gap-5 w-1/2"
+          className="justify-center overflow-y-auto max-h-[500px] flex flex-wrap gap-5 w-full md:w-1/2"
         >
           {favoriteHomes.length ? (
-            favoriteHomes?.map((home) => (
+            favoriteHomes.map((home) => (
               <HomeCard
                 key={home.id}
                 home={home}
@@ -36,12 +37,13 @@ export const Favorites = () => {
               />
             ))
           ) : (
-            <h3 className="font-serif font-light text-2xl flex items-center">
+            <h3 className="font-serif font-light text-2xl flex mt-10">
               No homes currently favorited
             </h3>
           )}
         </div>
-        <div className="border w-1/2 h-[500px]">
+
+        <div className="border w-full md:w-1/2 h-[400px] md:h-[500px]">
           {favoriteHomes.length > 0 && <NashvilleMap homes={favoriteHomes} />}
         </div>
       </div>

@@ -7,7 +7,6 @@ import {
   useMap,
 } from "@vis.gl/react-google-maps";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
-import { HomeDetails } from "./Homes/HomeDetails";
 import { HomeCard } from "./Homes/HomeCard";
 
 export const NashvilleMap = ({ homes }) => {
@@ -27,7 +26,6 @@ export const NashvilleMap = ({ homes }) => {
 
 const HomeMarkers = ({ homes }) => {
   const [selectedHome, setSelectedHome] = useState(null);
-  const [overlayPos, setOverlayPos] = useState({ x: 0, y: 0 });
   const map = useMap();
   const markersRef = useRef({});
   const clusterer = useRef(null);
