@@ -1,14 +1,16 @@
-import { Navigate, Outlet } from "react-router-dom"
-import { NavBar } from "./nav/Navbar.jsx"
+import { Navigate, Outlet } from "react-router-dom";
+import { NavBar } from "./nav/Navbar.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export const Authorized = () => {
-  if (localStorage.getItem("homesclient_token")) {
-    return <>
-      <NavBar />
-      <main className="p-4">
-        <Outlet />
-      </main>
-    </>
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
-  return <Navigate to="/login" replace />
-}
+  return (
+    <>
+      <NavBar />
+      <Outlet />
+    </>
+  );
+};

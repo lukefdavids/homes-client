@@ -1,99 +1,134 @@
-import { useRef, useState } from "react"
-import { Link, useNavigate } from "react-router-dom";
-import "./Login.css"
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { registerUser } from "../services/AuthManager";
+import { useAuth } from "../../context/AuthContext";
 
 export const Register = () => {
-    const [email, setEmail] = useState("admina@straytor.com")
-    const [password, setPassword] = useState("straytor")
-    const [firstName, setFirstName] = useState("Admina")
-    const [lastName, setLastName] = useState("Straytor")
-    const existDialog = useRef()
-    const navigate = useNavigate()
+  const firstName = useRef();
+  const lastName = useRef();
+  const email = useRef();
+  const username = useRef();
+  const password = useRef();
+  const verifyPassword = useRef();
+  const navigate = useNavigate();
+  const { setToken } = useAuth();
+  const handleRegister = () => {
+    if (password.current.value === verifyPassword.current.value) {
+      const newUser = {
+        username: username.current.value,
+        first_name: firstName.current.value,
+        last_name: lastName.current.value,
+        email: email.current.value,
+        password: password.current.value,
+      };
 
-    const handleRegister = (e) => {
-        e.preventDefault()
-        fetch("http://localhost:8000/register", {
-            method: "POST",
-            body: JSON.stringify({
-                email,
-                password,
-                first_name: firstName,
-                last_name: lastName
-            }),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-            .then(res => res.json())
-            .then(authInfo => {
-                if (authInfo && authInfo.token) {
-                    localStorage.setItem("homesclient_token", JSON.stringify(authInfo))
-                    navigate("/")
-                } else {
-                    existDialog.current.showModal()
-                }
-            })
+      registerUser(newUser).then((res) => {
+        console.log(typeof res);
+        if ("valid" in res && res.valid) {
+          setToken(res.token);
+          navigate("/");
+        }
+      });
+    } else {
+      alert("Passwords do not match!");
     }
+  };
 
-    return (
-        <main className="container--login">
-            <dialog className="dialog dialog--auth" ref={existDialog}>
-                <div>User does not exist</div>
-                <button className="button--close" onClick={() => existDialog.current.close()}>Close</button>
-            </dialog>
+  const handleCancel = (e) => {
+    e.preventDefault();
+    navigate("/login");
+  };
 
-            <section>
-                <form className="form--login" onSubmit={handleRegister}>
-                    <h1 className="text-4xl mt-7 mb-3">homesclient</h1>
-                    <h2 className="text-xl mb-10">Register new account</h2>
-                    <fieldset className="mb-4">
-                        <label htmlFor="firstName"> First name </label>
-                        <input type="text" id="firstName"
-                            value={firstName}
-                            onChange={evt => setFirstName(evt.target.value)}
-                            className="form-control"
-                            placeholder=""
-                            required autoFocus />
-                    </fieldset>
-                    <fieldset className="mb-4">
-                        <label htmlFor="lastName"> Last name </label>
-                        <input type="text" id="lastName"
-                            value={lastName}
-                            onChange={evt => setLastName(evt.target.value)}
-                            className="form-control"
-                            placeholder=""
-                            required autoFocus />
-                    </fieldset>
-                    <fieldset className="mb-4">
-                        <label htmlFor="inputEmail"> Email address </label>
-                        <input type="email" id="inputEmail"
-                            value={email}
-                            onChange={evt => setEmail(evt.target.value)}
-                            className="form-control"
-                            placeholder="Email address"
-                            required autoFocus />
-                    </fieldset>
-                    <fieldset className="mb-4">
-                        <label htmlFor="inputPassword"> Password </label>
-                        <input type="password" id="inputPassword"
-                            value={password}
-                            onChange={evt => setPassword(evt.target.value)}
-                            className="form-control"
-                            placeholder="Password"
-                        />
-                    </fieldset>
-                    <fieldset>
-                        <button type="submit" className="button p-3 rounded-md bg-blue-800 text-blue-100">
-                            Register
-                        </button>
-                    </fieldset>
-                </form>
-            </section>
-            <div className="loginLinks">
-                <section className="link--register">
-                    <Link className="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" to="/login">Already have an account?</Link>
-                </section>
+  return (
+    <form
+      onSubmit={handleRegister}
+      className="flex justify-center py-8 min-h-screen"
+    >
+      <div className="w-full max-w-2xl px-4">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Nashville Homes
+          </h1>
+          <p className="text-lg text-gray-600 mb-6">Create an account</p>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              First Name
+            </label>
+            <input
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              ref={firstName}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Last Name
+            </label>
+            <input
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              ref={lastName}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Username
+            </label>
+            <input
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              ref={username}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              type="email"
+              ref={email}
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                type="password"
+                placeholder="Password"
+                ref={password}
+              />
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                type="password"
+                placeholder="Verify Password"
+                ref={verifyPassword}
+              />
             </div>
-        </main>
-    )
-}
+          </div>
+
+          <div className="flex gap-4 justify-center">
+            <button className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Submit
+            </button>
+            <button
+              onClick={handleCancel}
+              className="px-6 py-2 bg-blue-100 text-blue-700 font-medium rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+};

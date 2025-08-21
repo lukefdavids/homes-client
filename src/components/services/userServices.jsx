@@ -1,8 +1,8 @@
-export const getCurrentUser = () => {
-    return fetch("http://localhost:8000/current_user", {
-        headers: {
-            Authorization: "Token " + JSON.parse(localStorage.getItem('homesclient_token')).token,
-            "Content-Type": "application/json"
-        }
-    }).then(res => res.json())
-}
+export const getCurrentUser = (token) => {
+  return fetch("http://localhost:8000/current_user", {
+    headers: {
+      Authorization: `Token ${token}`,
+      "Content-Type": "application/json",
+    },
+  }).then((res) => res.json());
+};
